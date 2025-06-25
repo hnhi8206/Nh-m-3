@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Dự Đoán Bảo Dưỡng Vận Tải</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-truck-monster text-3xl"></i>
+                    <h1 class="text-2xl font-bold">Hệ Thống Dự Đoán Bảo Dưỡng</h1>
+                </div>
+                <nav>
+                    <ul class="flex space-x-6">
+                        <li><a href="#" class="hover:text-blue-200"><i class="fas fa-home mr-1"></i> Trang chủ</a></li>
+                        <li><a href="#" class="hover:text-blue-200"><i class="fas fa-history mr-1"></i> Lịch sử</a></li>
+                        <li><a href="#" class="hover:text-blue-200"><i class="fas fa-cog mr-1"></i> Cài đặt</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden card-hover">
+                    <div class="gradient-bg px-6 py-4">
+                        <h2 class="text-xl font-semibold text-white">Nhập Thông Số Hệ Thống</h2>
+                    </div>
+                    <div class="p-6">
+                        <form id="maintenanceForm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-800 mb-4 border-b pb-2"><i class="fas fa-truck mr-2"></i>Thông tin phương tiện</h3>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Loại phương tiện</label>
+                                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                            <option value="truck">Xe tải</option>
+                                            <option value="bus">Xe khách</option>
+                                            <option value="container">Xe container</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Số km đã đi (km)</label>
+                                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="50000">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tuổi phương tiện (năm)</label>
+                                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="3">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-800 mb-4 border-b pb-2"><i class="fas fa-wrench mr-2"></i>Lịch sử bảo dưỡng</h3>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Lần bảo dưỡng gần nhất (tháng trước)</label>
+                                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="6">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Tần suất bảo dưỡng (tháng/lần)</label>
+                                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="12">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <button type="button" onclick="predictMaintenance()" class="w-full gradient-bg text-white py-3 px-4 rounded-md shadow-md hover:opacity-90 transition flex items-center justify-center pulse-animation">
+                                    <i class="fas fa-calculator mr-2"></i> Dự đoán nhu cầu bảo dưỡng
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div id="resultsSection" class="mt-8 bg-white rounded-xl shadow-md overflow-hidden hidden card-hover">
+                    <div class="gradient-bg px-6 py-4">
+                        <h2 class="text-xl font-semibold text-white">Kết Quả Dự Đoán</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                <div class="text-blue-800 font-medium mb-1"><i class="fas fa-exclamation-triangle mr-1"></i> Mức độ ưu tiên</div>
+                                <div id="priorityLevel" class="text-2xl font-bold text-blue-600">Cao</div>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                                <div class="text-yellow-800 font-medium mb-1"><i class="fas fa-clock mr-1"></i> Thời gian đề xuất</div>
+                                <div id="suggestedTime" class="text-2xl font-bold text-yellow-600">7-10 ngày</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <canvas id="maintenanceChart" height="200"></canvas>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-800 mb-2"><i class="fas fa-lightbulb mr-2"></i>Khuyến nghị bảo dưỡng</h3>
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                <li>Thay dầu động cơ và lọc dầu</li>
+                                <li>Kiểm tra hệ thống phanh</li>
+                                <li>Bảo dưỡng hệ thống treo</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6 card-hover">
+                    <div class="gradient-bg px-6 py-4">
+                        <h2 class="text-xl font-semibold text-white"><i class="fas fa-history mr-2"></i>Lịch sử bảo dưỡng</h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-4">
+                            <div class="border-l-4 border-blue-500 pl-4 py-1">
+                                <div class="text-sm font-medium text-gray-800">Bảo dưỡng định kỳ</div>
+                                <div class="text-xs text-gray-500">12/06/2023 - 2.500.000đ</div>
+                            </div>
+                            <div class="border-l-4 border-yellow-500 pl-4 py-1">
+                                <div class="text-sm font-medium text-gray-800">Thay dầu động cơ</div>
+                                <div class="text-xs text-gray-500">15/03/2023 - 1.200.000đ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function predictMaintenance() {
+            // Hiển thị kết quả
+            document.getElementById('resultsSection').classList.remove('hidden');
+            
+            // Tạo biểu đồ
+            const ctx = document.getElementById('maintenanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Động cơ', 'Hệ thống phanh', 'Hệ thống điện', 'Lốp xe'],
+                    datasets: [{
+                        label: 'Mức độ hao mòn (%)',
+                        data: [75, 65, 40, 60],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
